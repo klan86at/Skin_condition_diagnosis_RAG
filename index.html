@@ -112,7 +112,7 @@
       formData.append("description", description);
 
       try {
-        const response = await fetch("https://skin-condition-diagnosis-rag.onrender.com", {
+        const response = await fetch("https://skin-condition-diagnosis-rag.onrender.com/analyze/", {
           method: "POST",
           body: formData,
         });
