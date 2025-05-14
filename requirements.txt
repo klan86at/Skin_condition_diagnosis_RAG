@@ -7,9 +7,5 @@
 fastapi
 uvicorn
 requests
-python-dotenv
-streamlit
 pydantic
 python-multipart
-scikit-learn
-joblib
