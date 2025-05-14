@@ -1,0 +1,15 @@
+# .env file (create in project root)
+# Note: DO NOT commit this file to public repos!
+
+
+# ----------------------
+# requirements.txt
+fastapi
+uvicorn
+requests
+python-dotenv
+streamlit
+pydantic
+python-multipart
+scikit-learn
+joblib
