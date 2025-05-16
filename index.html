@@ -1,132 +1,295 @@
 <!DOCTYPE html>
-     <html lang="en">
-     <head>
-       <meta charset="UTF-8">
-       <title>Skin Disease Diagnosis</title>
-       <script src="/api/env.js"></script>
-       <style>
-         /* General Body Styling */
-         body {
-           font-family: Arial, sans-serif;
-           max-width: 600px;
-           margin: auto;
-           padding: 2rem;
-           background-color: #363636; /* Dark gray background */
-           color: #36AAA1; /* Soft yellow text for contrast */
-           border-radius: 8px;
-           box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-         }
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="backend-url" content="https://skin-disease-backend.onrender.com">
+  <title>Skin Disease Diagnosis</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 2rem;
+      background-color: #363636;
+      color: #36AAA1;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #36AAA1;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+      color: #36AAA1;
+    }
+    input[type="file"], input[type="text"] {
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      color: #333;
+      width: 100%;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 0.8rem;
+      margin-top: 1rem;
+      background-color: #36AAA1;
+      color: #363636;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #cccc66;
+    }
+    button.wake-backend {
+      background-color: #666;
+      color: #fff;
+    }
+    button.wake-backend:hover {
+      background-color: #888;
+    }
+    .result {
+      margin-top: 2rem;
+      padding: 1rem;
+      background-color: #f9f9f9;
+      color: #333;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Skin Disease Diagnostic</h1>
 
-         /* Heading Styling */
-         h1 {
-           color: #36AAA1; /* Match the foreground color */
-           text-align: center;
-           margin-bottom: 1.5rem;
-         }
+  <label for="backend-url">Backend URL (optional):</label>
+  <input type="text" id="backend-url" placeholder="e.g., https://skin-disease-backend.onrender.com">
 
-         /* Textarea Styling */
-         textarea {
-           width: 100%;
-           height: 100px;
-           margin-bottom: 1rem;
-           padding: 0.5rem;
-           border: 1px solid #ccc;
-           border-radius: 4px;
-           background-color: #f9f9f9; /* Light background for input fields */
-           color: #333; /* Dark text for readability */
-         }
+  <label for="description">Description of Skin Condition:</label>
+  <textarea id="description" placeholder="e.g. A red patch on the skin with a raised bump in the center..."></textarea>
 
-         /* File Input Styling */
-         label {
-           display: block;
-           margin-top: 1rem;
-           font-weight: bold;
-           color: #36AAA1; /* Match the foreground color */
-         }
+  <label for="image">Upload Skin Image:</label>
+  <input type="file" id="image" accept="image/*">
 
-         input[type="file"] {
-           margin: 0.5rem 0;
-           padding: 0.5rem;
-           background-color: #f9f9f9;
-           border: 1px solid #ccc;
-           border-radius: 4px;
-           color: #333;
-         }
+  <button class="wake-backend" onclick="wakeBackend()">Wake Backend</button>
+  <button onclick="analyze()">Analyze</button>
 
-         /* Button Styling */
-         button {
-           display: block;
-           width: 100%;
-           padding: 0.8rem;
-           margin-top: 1rem;
-           background-color: #36AAA1; /* Soft yellow button color */
-           color: #363636; /* Dark gray text for contrast */
-           border: none;
-           border-radius: 4px;
-           font-size: 1rem;
-           font-weight: bold;
-           cursor: pointer;
-           transition: background-color 0.3s ease; /* Smooth hover effect */
-         }
+  <div class="result" id="result"></div>
 
-         button:hover {
-           background-color: #cccc66; /* Slightly darker yellow on hover */
-         }
+  <script>
+    const DEFAULT_BACKEND_URL = 'https://skin-disease-backend.onrender.com';
+    let BACKEND_URL = DEFAULT_BACKEND_URL;
+    console.log('Default Backend URL:', BACKEND_URL);
+    console.log('Navigator:', { userAgent: navigator.userAgent, onLine: navigator.onLine });
 
-         /* Result Section Styling */
-         .result {
-           margin-top: 2rem;
-           padding: 1rem;
-           background-color: #f9f9f9; /* Light background for results */
-           color: #333; /* Dark text for readability */
-           border-radius: 4px;
-           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-         }
-       </style>
-     </head>
-     <body>
-       <h1>Skin Disease Analyzer</h1>
+    document.getElementById('backend-url').addEventListener('change', (e) => {
+      BACKEND_URL = e.target.value.trim() || DEFAULT_BACKEND_URL;
+      console.log('Updated Backend URL:', BACKEND_URL);
+    });
 
-       <label for="description">Description of Skin Condition:</label>
-       <textarea id="description" placeholder="e.g. A red patch on the skin with a raised bump in the center..."></textarea>
+    async function fetchWithTimeout(url, options, timeout = 20000) {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(id);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+        return response;
+      } catch (err) {
+        clearTimeout(id);
+        throw err;
+      }
+    }
 
-       <label for="image">Upload Skin Image:</label>
-       <input type="file" id="image" accept="image/*">
+    async function checkBackend() {
+      document.getElementById("result").innerText = "Checking backend availability...";
+      // Health check retries
+      for (let attempt = 1; attempt <= 6; attempt++) {
+        try {
+          console.log(`Attempt ${attempt}: Checking health at ${BACKEND_URL}/health`);
+          const response = await fetchWithTimeout(`${BACKEND_URL}/health`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+          }, 20000);
+          if (!response.ok) {
+            let errorText = 'No response body';
+            try {
+              errorText = await response.text();
+            } catch {}
+            throw new Error(`Health check failed: Status ${response.status}, Details: ${errorText}`);
+          }
+          const data = await response.json();
+          console.log('Backend health:', data);
+          document.getElementById("result").innerText = "Backend is available!";
+          return true;
+        } catch (err) {
+          console.error(`Health check attempt ${attempt} failed:`, err.message, err.name, err.stack || err);
+          if (attempt === 6) {
+            break;
+          }
+          console.log('Retrying health check in 3000ms...');
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+      }
 
-       <button onclick="analyze()">Analyze</button>
+      // Root check retries
+      for (let attempt = 1; attempt <= 6; attempt++) {
+        try {
+          console.log(`Attempt ${attempt}: Checking root at ${BACKEND_URL}/`);
+          const response = await fetchWithTimeout(`${BACKEND_URL}/`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+          }, 20000);
+          if (!response.ok) {
+            let errorText = 'No response body';
+            try {
+              errorText = await response.text();
+            } catch {}
+            throw new Error(`Root check failed: Status ${response.status}, Details: ${errorText}`);
+          }
+          const data = await response.json();
+          console.log('Root endpoint:', data);
+          document.getElementById("result").innerText = "Backend root endpoint is available!";
+          return true;
+        } catch (err) {
+          console.error(`Root check attempt ${attempt} failed:`, err.message, err.name, err.stack || err);
+          if (attempt === 6) {
+            break;
+          }
+          console.log('Retrying root check in 3000ms...');
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+      }
 
-       <div class="result" id="result"></div>
+      // Fallback network test
+      try {
+        console.log('Testing network with external endpoint: https://api.groq.com/openai/v1/models');
+        const response = await fetchWithTimeout('https://api.groq.com/openai/v1/models', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        }, 10000);
+        if (!response.ok) {
+          throw new Error(`Network test failed: Status ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('Network test:', data);
+        document.getElementById("result").innerText = `Backend unreachable, but network is active: ${err.message}. Click "Wake Backend" or check the backend URL.`;
+        return false;
+      } catch (networkErr) {
+        console.error('Network test failed:', networkErr.message, networkErr.name, networkErr.stack || networkErr);
+        document.getElementById("result").innerText = `Network issue detected: ${networkErr.message}. Check your internet connection or firewall.`;
+        return false;
+      }
+    }
 
-       <script>
-         // Vercel injects environment variables as window.__VERCEL_ENV
-         const BACKEND_URL = window.__VERCEL_ENV?.BACKEND_URL || 'http://localhost:3000';
+    async function wakeBackend() {
+      document.getElementById("result").innerText = "Waking backend...";
+      const backendAvailable = await checkBackend();
+      if (backendAvailable) {
+        document.getElementById("result").innerText = "Backend is awake! Click Analyze to proceed.";
+      } else {
+        document.getElementById("result").innerText = "Failed to wake backend. Check the backend URL, network, or try again.";
+      }
+    }
 
-         async function analyze() {
-           const description = document.getElementById("description").value;
-           const fileInput = document.getElementById("image");
-           const imageFile = fileInput.files[0];
+    async function fetchWithRetry(url, options, retries = 6, delay = 3000) {
+      for (let i = 0; i < retries; i++) {
+        try {
+          console.log(`Attempt ${i + 1}: Sending request to ${url}`);
+          const response = await fetchWithTimeout(url, {
+            ...options,
+            headers: {
+              'Accept': 'application/json',
+              ...options.headers
+            }
+          }, 20000);
+          if (!response.ok) {
+            let errorText = 'No response body';
+            try {
+              errorText = await response.text();
+            } catch {}
+            console.error(`Response error: Status ${response.status}, Details: ${errorText}`);
+            throw new Error(`HTTP error! Status ${response.status}, Details: ${errorText}`);
+          }
+          console.log('Response received:', response);
+          return response;
+        } catch (err) {
+          console.error(`Attempt ${i + 1} failed:`, err.message, err.name, err.stack || err);
+          if (i < retries - 1) {
+            console.log(`Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          } else {
+            throw err;
+          }
+        }
+      }
+    }
 
-           if (!imageFile || !description.trim()) {
-             document.getElementById("result").innerText = "Please upload an image and enter a description.";
-             return;
-           }
+    async function analyze() {
+      document.getElementById("result").innerText = "Preparing to analyze...";
+      // Health check bypassed to test /analyze
+      /*
+      const backendAvailable = await checkBackend();
+      if (!backendAvailable) {
+        console.warn('Aborting analyze due to backend unavailability');
+        return;
+      }
+      */
 
-           const formData = new FormData();
-           formData.append("image", imageFile);
-           formData.append("description", description);
+      const description = document.getElementById("description").value;
+      const fileInput = document.getElementById("image");
+      const imageFile = fileInput.files[0];
 
-           try {
-             const response = await fetch(`${BACKEND_URL}/analyze/`, {
-               method: "POST",
-               body: formData,
-             });
+      if (!imageFile || !description.trim()) {
+        document.getElementById("result").innerText = "Please upload an image and enter a description.";
+        console.warn('Validation failed: Missing image or description');
+        return;
+      }
 
-             const result = await response.json();
-             document.getElementById("result").innerText = result.diagnosis || result.error;
-           } catch (err) {
-             document.getElementById("result").innerText = "Request failed: " + err.message;
-           }
-         }
-       </script>
-     </body>
-     </html>
+      const formData = new FormData();
+      formData.append("image", imageFile);
+      formData.append("description", description);
+
+      console.log('FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value instanceof File ? `File(${value.name}, ${value.size} bytes)` : value);
+      }
+
+      try {
+        document.getElementById("result").innerText = "Sending analysis request...";
+        const response = await fetchWithRetry(`${BACKEND_URL}/analyze`, {
+          method: "POST",
+          body: formData,
+        });
+
+        const result = await response.json();
+        console.log('Parsed response:', result);
+        document.getElementById("result").innerText = result.diagnosis || result.error || 'No diagnosis returned';
+      } catch (err) {
+        console.error('Analyze fetch error:', err.message, err.name, err.stack || err);
+        document.getElementById("result").innerText = `Analysis failed: ${err.message}. Click "Wake Backend" or check the backend URL.`;
+      }
+    }
+  </script>
+</body>
+</html>
